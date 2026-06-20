@@ -1,15 +1,24 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { AuthProvider } from '@/context/auth';
 
-export default function TabLayout() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="redirect" />
+          <Stack.Screen name="leagues" />
+          <Stack.Screen name="draft/[leagueId]" options={{ headerShown: true, title: 'Draft Board' }} />
+          <Stack.Screen name="mock-draft/setup" options={{ headerShown: true, title: 'Mock Draft' }} />
+          <Stack.Screen name="mock-draft/draft" options={{ headerShown: true, title: 'Mock Draft' }} />
+        </Stack>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
