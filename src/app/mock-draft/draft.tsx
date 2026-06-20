@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -305,7 +305,7 @@ export default function MockDraftScreen() {
   const handleExitDraft = useCallback(() => {
     Alert.alert(
       'Exit Draft',
-      'Are you sure you want to exit the draft? Your progress will be lost.',
+      'Are you sure you want to exit? Your draft progress will be lost.',
       [
         { text: 'Cancel', style: 'cancel' },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -322,34 +322,38 @@ export default function MockDraftScreen() {
   // ── error state ──
   if (error) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText themeColor="textSecondary" style={{ textAlign: 'center', paddingHorizontal: Spacing.four }}>
-          {error}
-        </ThemedText>
-        <Pressable onPress={() => router.back()} style={[styles.btn, { backgroundColor: theme.text }]}>
-          <ThemedText style={{ color: theme.background, fontWeight: '600' }}>Go Back</ThemedText>
-        </Pressable>
-      </ThemedView>
+      <>
+        <Stack.Screen options={{ headerBackVisible: false, headerLeft: () => <HeaderBackButton onPress={handleExitDraft} /> }} />
+        <ThemedView style={styles.centered}>
+          <ThemedText themeColor="textSecondary" style={{ textAlign: 'center', paddingHorizontal: Spacing.four }}>
+            {error}
+          </ThemedText>
+          <Pressable onPress={() => router.back()} style={[styles.btn, { backgroundColor: theme.text }]}>
+            <ThemedText style={{ color: theme.background, fontWeight: '600' }}>Go Back</ThemedText>
+          </Pressable>
+        </ThemedView>
+      </>
     );
   }
 
   // ── initial loading ──
   if (phase === 'loading') {
     return (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator size="large" />
-        <ThemedText themeColor="textSecondary">Loading player pool…</ThemedText>
-      </ThemedView>
+      <>
+        <Stack.Screen options={{ headerBackVisible: false, headerLeft: () => <HeaderBackButton onPress={handleExitDraft} /> }} />
+        <ThemedView style={styles.centered}>
+          <ActivityIndicator size="large" />
+          <ThemedText themeColor="textSecondary">Loading player pool…</ThemedText>
+        </ThemedView>
+      </>
     );
   }
 
   return (
     <ThemedView style={styles.container}>
+      <Stack.Screen options={{ headerBackVisible: false, headerLeft: () => <HeaderBackButton onPress={handleExitDraft} /> }} />
       {/* ── Status bar ── */}
       <ThemedView type="backgroundElement" style={styles.statusBar}>
-        <Pressable onPress={handleExitDraft} style={styles.exitBtn} hitSlop={8}>
-          <ThemedText type="small" themeColor="textSecondary">← Exit</ThemedText>
-        </Pressable>
         <ThemedView style={styles.statusInfo}>
           <ThemedText type="smallBold">
             Round {currentRound} · Pick {currentOverallPick} of {totalPicks}
@@ -557,6 +561,15 @@ export default function MockDraftScreen() {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
+
+function HeaderBackButton({ onPress }: { onPress: () => void }) {
+  const theme = useTheme();
+  return (
+    <Pressable onPress={onPress} hitSlop={8} style={{ paddingRight: 8 }}>
+      <ThemedText style={{ fontSize: 17, color: theme.text }}>{'← Exit'}</ThemedText>
+    </Pressable>
+  );
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -789,9 +802,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-  },
-  exitBtn: {
-    padding: Spacing.one,
   },
   statusInfo: {
     flex: 1,
