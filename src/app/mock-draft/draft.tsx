@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -300,6 +301,19 @@ export default function MockDraftScreen() {
     if (player) handleDraftPlayer(player);
   }, [recommendation, handleDraftPlayer]);
 
+  // ── exit draft ──
+  const handleExitDraft = useCallback(() => {
+    Alert.alert(
+      'Exit Draft',
+      'Are you sure you want to exit the draft? Your progress will be lost.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { text: 'Exit', style: 'destructive', onPress: () => router.replace('/leagues' as any) },
+      ],
+    );
+  }, []);
+
   // ── derived ──
   const currentRound = Math.ceil(currentOverallPick / numTeams);
   const recentPicks = [...pickLog].reverse().slice(0, 30);
@@ -333,12 +347,17 @@ export default function MockDraftScreen() {
     <ThemedView style={styles.container}>
       {/* ── Status bar ── */}
       <ThemedView type="backgroundElement" style={styles.statusBar}>
-        <ThemedText type="smallBold">
-          Round {currentRound} · Pick {currentOverallPick} of {totalPicks}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {numTeams} teams · Position {myPickPosition} · {pickLog.filter((p) => p.is_mine).length} picks made
-        </ThemedText>
+        <Pressable onPress={handleExitDraft} style={styles.exitBtn} hitSlop={8}>
+          <ThemedText type="small" themeColor="textSecondary">← Exit</ThemedText>
+        </Pressable>
+        <ThemedView style={styles.statusInfo}>
+          <ThemedText type="smallBold">
+            Round {currentRound} · Pick {currentOverallPick} of {totalPicks}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {numTeams} teams · Position {myPickPosition} · {pickLog.filter((p) => p.is_mine).length} picks made
+          </ThemedText>
+        </ThemedView>
       </ThemedView>
 
       {/* ── Tab switcher ── */}
@@ -767,7 +786,17 @@ const styles = StyleSheet.create({
   statusBar: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  exitBtn: {
+    padding: Spacing.one,
+  },
+  statusInfo: {
+    flex: 1,
     gap: Spacing.half,
+    backgroundColor: 'transparent',
   },
   tabs: {
     flexDirection: 'row',
