@@ -160,7 +160,7 @@ def rank_players(
     cfg = _build_config_override(_default_cfg, num_teams or _default_cfg.NUM_TEAMS)
 
     # 1. Fetch ESPN projections (cached after first call)
-    projections = _espn.get_projections(cfg.ESPN_SEASON_YEAR, cfg.ESPN_PROJECTION_CACHE_TTL_SECONDS)
+    projections = _espn.get_projections(cfg.ESPN_SEASON_YEAR)
 
     # 2. Merge Yahoo player data with ESPN projections
     split = len(available_players)
