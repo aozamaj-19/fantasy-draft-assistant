@@ -66,10 +66,13 @@ def get_players_by_keys(league_key):
 
     try:
         players_raw = data["fantasy_content"]["league"][1]["players"]
-        players_list = [
-            _parse_player(players_raw[str(i)]["player"])
-            for i in range(players_raw.get("count", 0))
-        ]
+        if isinstance(players_raw, dict):
+            players_list = [
+                _parse_player(players_raw[str(i)]["player"])
+                for i in range(players_raw.get("count", 0))
+            ]
+        else:
+            players_list = [_parse_player(p["player"]) for p in players_raw if isinstance(p, dict)]
         return jsonify({"players": players_list, "count": len(players_list)})
     except (KeyError, IndexError, TypeError) as exc:
         return jsonify({"error": f"Parse error: {exc}", "raw": data}), 500
@@ -96,10 +99,13 @@ def get_players(league_key):
 
     try:
         players_raw = data["fantasy_content"]["league"][1]["players"]
-        players_list = [
-            _parse_player(players_raw[str(i)]["player"])
-            for i in range(players_raw.get("count", 0))
-        ]
+        if isinstance(players_raw, dict):
+            players_list = [
+                _parse_player(players_raw[str(i)]["player"])
+                for i in range(players_raw.get("count", 0))
+            ]
+        else:
+            players_list = [_parse_player(p["player"]) for p in players_raw if isinstance(p, dict)]
         return jsonify({"players": players_list, "count": len(players_list)})
     except (KeyError, IndexError, TypeError) as exc:
         return jsonify({"error": f"Parse error: {exc}", "raw": data}), 500
