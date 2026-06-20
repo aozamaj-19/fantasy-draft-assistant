@@ -1,7 +1,23 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 const TOKENS_KEY = 'yahoo_auth_tokens';
+
+const storage = {
+  getItem: (key: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(sessionStorage.getItem(key))
+      : SecureStore.getItemAsync(key),
+  setItem: (key: string, value: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(sessionStorage.setItem(key, value))
+      : SecureStore.setItemAsync(key, value),
+  deleteItem: (key: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(sessionStorage.removeItem(key))
+      : SecureStore.deleteItemAsync(key),
+};
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000';
 
 export type AuthTokens = {
@@ -26,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    SecureStore.getItemAsync(TOKENS_KEY)
+    storage.getItem(TOKENS_KEY)
       .then((stored) => {
         if (stored) setTokens(JSON.parse(stored));
       })
@@ -35,12 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (newTokens: AuthTokens) => {
-    await SecureStore.setItemAsync(TOKENS_KEY, JSON.stringify(newTokens));
+    await storage.setItem(TOKENS_KEY, JSON.stringify(newTokens));
     setTokens(newTokens);
   }, []);
 
   const signOut = useCallback(async () => {
-    await SecureStore.deleteItemAsync(TOKENS_KEY);
+    await storage.deleteItem(TOKENS_KEY);
     setTokens(null);
   }, []);
 

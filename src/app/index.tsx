@@ -25,10 +25,9 @@ export default function LoginScreen() {
   const { accessToken, isLoading } = useAuth();
   const theme = useTheme();
 
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'fantasydraftassistant',
-    path: 'redirect',
-  });
+  const redirectUri = Platform.OS === 'web'
+    ? 'https://fantasy-draft-assistant2.netlify.app/redirect'
+    : AuthSession.makeRedirectUri({ scheme: 'fantasydraftassistant', path: 'redirect' });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -44,15 +43,20 @@ export default function LoginScreen() {
   // Persist the PKCE verifier so redirect.tsx can retrieve it after the deep-link round-trip.
   useEffect(() => {
     if (!request?.codeVerifier) return;
-    SecureStore.setItemAsync('pkce_code_verifier', request.codeVerifier).catch(() => {});
+    if (Platform.OS === 'web') {
+      sessionStorage.setItem('pkce_code_verifier', request.codeVerifier);
+    } else {
+      SecureStore.setItemAsync('pkce_code_verifier', request.codeVerifier).catch(() => {});
+    }
   }, [request?.codeVerifier]);
 
-  // On iOS, ASWebAuthenticationSession captures the redirect before Linking fires, so
-  // expo-router never routes to /redirect. We navigate there manually instead.
-  // On Android/web the deep link drives routing directly to /redirect.
+  // On iOS, ASWebAuthenticationSession intercepts the redirect before Linking fires.
+  // On web, the popup closes itself via maybeCompleteAuthSession() and passes the code
+  // back to this opener window via postMessage — expo-router in the opener stays at /.
+  // In both cases we navigate manually. Android deep-links route to /redirect directly.
   useEffect(() => {
     if (response?.type !== 'success') return;
-    if (Platform.OS !== 'ios') return;
+    if (Platform.OS === 'android') return;
     router.replace({ pathname: '/redirect', params: { code: response.params.code } });
   }, [response]);
 

@@ -13,7 +13,7 @@ from routes.players import players_bp
 from routes.recommendations import recommendations_bp
 
 app = Flask(__name__)
-CORS(app, origins="*")
+CORS(app, origins=["https://fantasy-draft-assistant2.netlify.app", "*"])
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(leagues_bp)

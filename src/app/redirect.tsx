@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as AuthSession from 'expo-auth-session';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -31,11 +31,12 @@ export default function RedirectScreen() {
 
     (async () => {
       try {
-        const codeVerifier = await SecureStore.getItemAsync('pkce_code_verifier');
-        const redirectUri = AuthSession.makeRedirectUri({
-          scheme: 'fantasydraftassistant',
-          path: 'redirect',
-        });
+        const codeVerifier = Platform.OS === 'web'
+          ? sessionStorage.getItem('pkce_code_verifier')
+          : await SecureStore.getItemAsync('pkce_code_verifier');
+        const redirectUri = Platform.OS === 'web'
+          ? 'https://fantasy-draft-assistant2.netlify.app/redirect'
+          : AuthSession.makeRedirectUri({ scheme: 'fantasydraftassistant', path: 'redirect' });
 
         const res = await fetch(`${API_BASE_URL}/auth/token`, {
           method: 'POST',
@@ -54,7 +55,11 @@ export default function RedirectScreen() {
         };
 
         await signIn(tokens);
-        await SecureStore.deleteItemAsync('pkce_code_verifier').catch(() => {});
+        if (Platform.OS === 'web') {
+          sessionStorage.removeItem('pkce_code_verifier');
+        } else {
+          await SecureStore.deleteItemAsync('pkce_code_verifier').catch(() => {});
+        }
         router.replace('/leagues');
       } catch (err) {
         console.error('OAuth redirect error:', err);
